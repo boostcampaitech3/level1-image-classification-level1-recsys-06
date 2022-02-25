@@ -8,12 +8,7 @@ import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset, Subset, random_split
-<<<<<<< HEAD
-from torchvision import transforms
-from torchvision.transforms import *
-=======
 from torchvision.transforms import Resize, ToTensor, Normalize, Compose, CenterCrop, ColorJitter
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 
 IMG_EXTENSIONS = [
     ".jpg", ".JPG", ".jpeg", ".JPEG", ".png",
@@ -27,11 +22,7 @@ def is_image_file(filename):
 
 class BaseAugmentation:
     def __init__(self, resize, mean, std, **args):
-<<<<<<< HEAD
-        self.transform = transforms.Compose([
-=======
         self.transform = Compose([
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
             Resize(resize, Image.BILINEAR),
             ToTensor(),
             Normalize(mean=mean, std=std),
@@ -60,11 +51,7 @@ class AddGaussianNoise(object):
 
 class CustomAugmentation:
     def __init__(self, resize, mean, std, **args):
-<<<<<<< HEAD
-        self.transform = transforms.Compose([
-=======
         self.transform = Compose([
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
             CenterCrop((320, 256)),
             Resize(resize, Image.BILINEAR),
             ColorJitter(0.1, 0.1, 0.1, 0.1),
@@ -265,11 +252,7 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         length = len(profiles)
         n_val = int(length * val_ratio)
 
-<<<<<<< HEAD
-        val_indices = set(random.choices(range(length), k=n_val))
-=======
         val_indices = set(random.sample(range(length), k=n_val))
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
         train_indices = set(range(length)) - val_indices
         return {
             "train": train_indices,
@@ -313,11 +296,7 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
 class TestDataset(Dataset):
     def __init__(self, img_paths, resize, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246)):
         self.img_paths = img_paths
-<<<<<<< HEAD
-        self.transform = transforms.Compose([
-=======
         self.transform = Compose([
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
             Resize(resize, Image.BILINEAR),
             ToTensor(),
             Normalize(mean=mean, std=std),
