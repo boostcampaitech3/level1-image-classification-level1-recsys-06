@@ -40,30 +40,13 @@ def grid_image(np_images, gts, preds, n=16, shuffle=False):
 
     choices = random.choices(range(batch_size), k=n) if shuffle else list(range(n))
     figure = plt.figure(figsize=(12, 18 + 2))  # cautions: hardcoded, 이미지 크기에 따라 figsize 를 조정해야 할 수 있습니다. T.T
-<<<<<<< HEAD
-<<<<<<< HEAD
-    plt.subplots_adjust(top=0.8)               # cautions: hardcoded, 이미지 크기에 따라 top 를 조정해야 할 수 있습니다. T.T
-    n_grid = np.ceil(n ** 0.5)
-=======
     plt.subplots_adjust(top=0.8)  # cautions: hardcoded, 이미지 크기에 따라 top 를 조정해야 할 수 있습니다. T.T
     n_grid = int(np.ceil(n ** 0.5))
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
-=======
-    plt.subplots_adjust(top=0.8)  # cautions: hardcoded, 이미지 크기에 따라 top 를 조정해야 할 수 있습니다. T.T
-    n_grid = int(np.ceil(n ** 0.5))
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
     tasks = ["mask", "gender", "age"]
     for idx, choice in enumerate(choices):
         gt = gts[choice].item()
         pred = preds[choice].item()
         image = np_images[choice]
-<<<<<<< HEAD
-<<<<<<< HEAD
-        # title = f"gt: {gt}, pred: {pred}"
-=======
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
-=======
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
         gt_decoded_labels = MaskBaseDataset.decode_multi_class(gt)
         pred_decoded_labels = MaskBaseDataset.decode_multi_class(pred)
         title = "\n".join([
@@ -109,15 +92,7 @@ def train(data_dir, model_dir, args):
     device = torch.device("cuda" if use_cuda else "cpu")
 
     # -- dataset
-<<<<<<< HEAD
-<<<<<<< HEAD
-    dataset_module = getattr(import_module("dataset"), args.dataset)  # default: BaseAugmentation
-=======
     dataset_module = getattr(import_module("dataset"), args.dataset)  # default: MaskBaseDataset
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
-=======
-    dataset_module = getattr(import_module("dataset"), args.dataset)  # default: MaskBaseDataset
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
     dataset = dataset_module(
         data_dir=data_dir,
     )
@@ -138,15 +113,7 @@ def train(data_dir, model_dir, args):
     train_loader = DataLoader(
         train_set,
         batch_size=args.batch_size,
-<<<<<<< HEAD
-<<<<<<< HEAD
-        num_workers=multiprocessing.cpu_count()//2,
-=======
         num_workers=multiprocessing.cpu_count() // 2,
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
-=======
-        num_workers=multiprocessing.cpu_count() // 2,
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
         shuffle=True,
         pin_memory=use_cuda,
         drop_last=True,
@@ -155,15 +122,7 @@ def train(data_dir, model_dir, args):
     val_loader = DataLoader(
         val_set,
         batch_size=args.valid_batch_size,
-<<<<<<< HEAD
-<<<<<<< HEAD
-        num_workers=multiprocessing.cpu_count()//2,
-=======
         num_workers=multiprocessing.cpu_count() // 2,
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
-=======
-        num_workers=multiprocessing.cpu_count() // 2,
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
         shuffle=False,
         pin_memory=use_cuda,
         drop_last=True,
@@ -278,30 +237,12 @@ def train(data_dir, model_dir, args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    from dotenv import load_dotenv
-    import os
-    load_dotenv(verbose=True)
-
-=======
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
-=======
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
     # Data and model checkpoints directories
     parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
     parser.add_argument('--epochs', type=int, default=1, help='number of epochs to train (default: 1)')
     parser.add_argument('--dataset', type=str, default='MaskBaseDataset', help='dataset augmentation type (default: MaskBaseDataset)')
     parser.add_argument('--augmentation', type=str, default='BaseAugmentation', help='data augmentation type (default: BaseAugmentation)')
-<<<<<<< HEAD
-<<<<<<< HEAD
-    parser.add_argument("--resize", nargs="+", type=list, default=[128, 96], help='resize size for image when training')
-=======
     parser.add_argument("--resize", nargs="+", type=int, default=[128, 96], help='resize size for image when training')
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
-=======
-    parser.add_argument("--resize", nargs="+", type=int, default=[128, 96], help='resize size for image when training')
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
     parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
     parser.add_argument('--valid_batch_size', type=int, default=1000, help='input batch size for validing (default: 1000)')
     parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
@@ -323,12 +264,4 @@ if __name__ == '__main__':
     data_dir = args.data_dir
     model_dir = args.model_dir
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     train(data_dir, model_dir, args)
-=======
-    train(data_dir, model_dir, args)
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
-=======
-    train(data_dir, model_dir, args)
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
