@@ -1,6 +1,7 @@
 # pstage_01_image_classification
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ## Getting Started    
 ### Dependencies
 - torch==1.6.0
@@ -19,6 +20,8 @@ SM_CHANNEL_EVAL=/opt/ml/input/data/eval SM_CHANNEL_MODEL=/opt/ml/exp SM_OUTPUT_D
 ### Evaluation
 - `SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python evaluation.py`
 =======
+=======
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 
 ## Getting Started  
 ---
@@ -143,4 +146,7 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 
 ## Data Augmentation
 ---
+<<<<<<< HEAD
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
+=======
 >>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3

@@ -41,8 +41,13 @@ def grid_image(np_images, gts, preds, n=16, shuffle=False):
     choices = random.choices(range(batch_size), k=n) if shuffle else list(range(n))
     figure = plt.figure(figsize=(12, 18 + 2))  # cautions: hardcoded, 이미지 크기에 따라 figsize 를 조정해야 할 수 있습니다. T.T
 <<<<<<< HEAD
+<<<<<<< HEAD
     plt.subplots_adjust(top=0.8)               # cautions: hardcoded, 이미지 크기에 따라 top 를 조정해야 할 수 있습니다. T.T
     n_grid = np.ceil(n ** 0.5)
+=======
+    plt.subplots_adjust(top=0.8)  # cautions: hardcoded, 이미지 크기에 따라 top 를 조정해야 할 수 있습니다. T.T
+    n_grid = int(np.ceil(n ** 0.5))
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 =======
     plt.subplots_adjust(top=0.8)  # cautions: hardcoded, 이미지 크기에 따라 top 를 조정해야 할 수 있습니다. T.T
     n_grid = int(np.ceil(n ** 0.5))
@@ -53,7 +58,10 @@ def grid_image(np_images, gts, preds, n=16, shuffle=False):
         pred = preds[choice].item()
         image = np_images[choice]
 <<<<<<< HEAD
+<<<<<<< HEAD
         # title = f"gt: {gt}, pred: {pred}"
+=======
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 =======
 >>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
         gt_decoded_labels = MaskBaseDataset.decode_multi_class(gt)
@@ -102,7 +110,11 @@ def train(data_dir, model_dir, args):
 
     # -- dataset
 <<<<<<< HEAD
+<<<<<<< HEAD
     dataset_module = getattr(import_module("dataset"), args.dataset)  # default: BaseAugmentation
+=======
+    dataset_module = getattr(import_module("dataset"), args.dataset)  # default: MaskBaseDataset
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 =======
     dataset_module = getattr(import_module("dataset"), args.dataset)  # default: MaskBaseDataset
 >>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
@@ -127,7 +139,11 @@ def train(data_dir, model_dir, args):
         train_set,
         batch_size=args.batch_size,
 <<<<<<< HEAD
+<<<<<<< HEAD
         num_workers=multiprocessing.cpu_count()//2,
+=======
+        num_workers=multiprocessing.cpu_count() // 2,
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 =======
         num_workers=multiprocessing.cpu_count() // 2,
 >>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
@@ -140,7 +156,11 @@ def train(data_dir, model_dir, args):
         val_set,
         batch_size=args.valid_batch_size,
 <<<<<<< HEAD
+<<<<<<< HEAD
         num_workers=multiprocessing.cpu_count()//2,
+=======
+        num_workers=multiprocessing.cpu_count() // 2,
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 =======
         num_workers=multiprocessing.cpu_count() // 2,
 >>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
@@ -259,10 +279,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     from dotenv import load_dotenv
     import os
     load_dotenv(verbose=True)
 
+=======
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 =======
 >>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
     # Data and model checkpoints directories
@@ -271,7 +294,11 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', type=str, default='MaskBaseDataset', help='dataset augmentation type (default: MaskBaseDataset)')
     parser.add_argument('--augmentation', type=str, default='BaseAugmentation', help='data augmentation type (default: BaseAugmentation)')
 <<<<<<< HEAD
+<<<<<<< HEAD
     parser.add_argument("--resize", nargs="+", type=list, default=[128, 96], help='resize size for image when training')
+=======
+    parser.add_argument("--resize", nargs="+", type=int, default=[128, 96], help='resize size for image when training')
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 =======
     parser.add_argument("--resize", nargs="+", type=int, default=[128, 96], help='resize size for image when training')
 >>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
@@ -297,7 +324,11 @@ if __name__ == '__main__':
     model_dir = args.model_dir
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     train(data_dir, model_dir, args)
+=======
+    train(data_dir, model_dir, args)
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 =======
     train(data_dir, model_dir, args)
 >>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3

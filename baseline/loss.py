@@ -47,6 +47,10 @@ class F1Loss(nn.Module):
         self.classes = classes
         self.epsilon = epsilon
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 =======
 
 >>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
