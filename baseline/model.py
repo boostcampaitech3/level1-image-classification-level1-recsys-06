@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 import math
+=======
+import torch.nn as nn
+import torch.nn.functional as F
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
 
 
 class BaseModel(nn.Module):
@@ -52,4 +57,8 @@ class MyModel(nn.Module):
         1. 위에서 정의한 모델 아키텍쳐를 forward propagation 을 진행해주세요
         2. 결과로 나온 output 을 return 해주세요
         """
+<<<<<<< HEAD
         return x
+=======
+        return x
+>>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
