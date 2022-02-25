@@ -86,7 +86,7 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 |resnet101         |1|64| 43.94 |
 |resnet152         |1|64| 42.25 | 0.1322|	36.5556|
 |resnext50_32x4d   |1|64| 42.12 |
-|resnext101_32x8d  |1|64| 47.51 |
+|resnext101_32x8d  |1|64| 47.51 | 0.1815|	41.7460|
 |wide_resnet50_2   |1|64| 38.57 |
 |wide_resnet101_2  |1|64| 38.23 | 0.0919|	30.1587|
 |vgg11             |1|64| 52.33 |
@@ -95,7 +95,7 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 |vgg13_bn          |1|64| 28.36 |
 |vgg16             |1|64| 57.14 | 0.4165|	58.1587|
 |vgg16_bn          |1|64| 27.12 |
-|vgg19             |1|64| 58.99 |
+|vgg19             |1|64| 58.99 | 0.4325|	58.7937|
 |vgg19_bn          |1|64| 27.59 | 0.0394|	18.1905|
 |alexnet           |1|64| 43.23 | 0.1974|	41.1270|
 
