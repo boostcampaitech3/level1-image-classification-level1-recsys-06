@@ -46,14 +46,7 @@ class F1Loss(nn.Module):
         super().__init__()
         self.classes = classes
         self.epsilon = epsilon
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
-=======
-
->>>>>>> 9841b696ea52e4cee307cf8b1b7d9252c8864fa3
     def forward(self, y_pred, y_true):
         assert y_pred.ndim == 2
         assert y_true.ndim == 1
