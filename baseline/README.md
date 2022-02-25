@@ -2,10 +2,9 @@
 
 
 ## Getting Started  
----
+
 ### Ground Rules
 
----
 일 10회 => 하루 인당 2회 
 11시 30 이후 제출 기회 남았을 시 물어보고 반대하는 사람 없으면 제출가능.
 or 오늘 제출 안한다고 미리 말하기
@@ -37,7 +36,7 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 
 
 ## Pretrained Models 
----
+
 <details>
 <summary>Available Models</summary>
 <div markdown="1">
@@ -100,7 +99,7 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 |vgg19_bn          |1|64| 27.59 | 0.0394|	18.1905|
 |alexnet           |1|64| 43.23 | 0.1974|	41.1270|
 
-- batchnorm 이 추가된 모델들이 성능이 좋지 않았다.
+- batch norm 이 추가된 모델들이 성능이 좋지 않았다.
 
 
 
@@ -108,35 +107,36 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 
 
 ## EDA
----
+
 <details>
 <summary>Outliers</summary>
 <div markdown="3">
 
 |female -> male|male -> female|incorrect<-> normal|
 |--------------|--------------|-------------------|
-|<span style="color:yellow">000010</span>|001498-1|000020|
-|<span style="color:yellow">000357</span>|004432|005227|
-|<span style="color:yellow">000664</span>|005223|
-|<span style="color:yellow">000667</span>|
-|<span style="color:yellow">000725</span>|
-|<span style="color:yellow">000736</span>|
-|<span style="color:yellow">000767</span>|
-|<span style="color:yellow">000817</span>|
+|000010 💥|001498-1|000020|
+|000357 💥|004432|005227|
+|000664 💥|005223|
+|000667 💥|
+|000725 💥|
+|000736 💥|
+|000767 💥|
+|000817 💥|
 |001720|
-|<span style="color:yellow">003780</span>|
-|<span style="color:yellow">003798</span>|
-|<span style="color:yellow">004281</span>|
+|003780 💥|
+|003798 💥|
+|004281 💥|
 |006359|
 |006360|
 |006361|
 |006362|
 |006363|
 |006364|
-|<span style="color:yellow">006504</span>|
+|006504 💥|
 
-<span style="color:yellow">not sure</span>
+💥 => not sure
 
+ 
 </div>
 </details>
 
