@@ -67,7 +67,6 @@ class resnet101(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-
 class resnet152(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
@@ -75,7 +74,6 @@ class resnet152(nn.Module):
         self.model.fc = nn.Linear(512*4, num_classes)
     def forward(self, x):
         return self.model(x)
-
 
 class resnext50_32x4d(nn.Module):
     def __init__(self, num_classes):
@@ -92,7 +90,6 @@ class resnext101_32x8d(nn.Module):
         self.model.fc = nn.Linear(512*4, num_classes)
     def forward(self, x):
         return self.model(x)
-
 
 class wide_resnet50_2(nn.Module):
     def __init__(self, num_classes):
