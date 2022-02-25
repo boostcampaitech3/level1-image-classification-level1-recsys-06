@@ -107,3 +107,151 @@ class wide_resnet101_2(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+#VGG
+
+class vgg11(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.vgg11(pretrained=True)
+        self.model.classifier= nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, num_classes),
+        )
+    def forward(self, x):
+        return self.model(x)
+
+class vgg11_bn(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.vgg11_bn(pretrained=True)
+        self.model.classifier= nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, num_classes),
+        )
+    def forward(self, x):
+        return self.model(x)
+
+class vgg13(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.vgg13(pretrained=True)
+        self.model.classifier= nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, num_classes),
+        )
+    def forward(self, x):
+        return self.model(x)
+
+class vgg13_bn(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.vgg13_bn(pretrained=True)
+        self.model.classifier= nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, num_classes),
+        )
+    def forward(self, x):
+        return self.model(x)
+
+class vgg16(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.vgg16(pretrained=True)
+        self.model.classifier= nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, num_classes),
+        )
+    def forward(self, x):
+        return self.model(x)
+
+class vgg16_bn(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.vgg16_bn(pretrained=True)
+        self.model.classifier= nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, num_classes),
+        )
+    def forward(self, x):
+        return self.model(x)
+
+class vgg19(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.vgg19(pretrained=True)
+        self.model.classifier= nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, num_classes),
+        )
+    def forward(self, x):
+        return self.model(x)
+
+class vgg19_bn(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.vgg19_bn(pretrained=True)
+        self.model.classifier= nn.Sequential(
+            nn.Linear(512 * 7 * 7, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(True),
+            nn.Dropout(),
+            nn.Linear(4096, num_classes),
+        )
+    def forward(self, x):
+        return self.model(x)
+
+#AlexNet
+
+class alexnet(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.alexnet(pretrained=True)
+        self.model.classifier = nn.Sequential(
+            nn.Dropout(),
+            nn.Linear(256 * 6 * 6, 4096),
+            nn.ReLU(inplace=True),
+            nn.Dropout(),
+            nn.Linear(4096, 4096),
+            nn.ReLU(inplace=True),
+            nn.Linear(4096, num_classes),
+        )
+
+    def forward(self, x):
+        return self.model(x)
