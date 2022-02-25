@@ -33,20 +33,80 @@ class BaseModel(nn.Module):
         return self.fc(x)
 
 
-# Custom Model Template
-class MyModel(nn.Module):
+# Resnet
+
+class resnet18(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
-
-        """
-        1. 위와 같이 생성자의 parameter 에 num_claases 를 포함해주세요.
-        2. 나만의 모델 아키텍쳐를 디자인 해봅니다.
-        3. 모델의 output_dimension 은 num_classes 로 설정해주세요.
-        """
-
+        self.model=torchvision.models.resnet18(pretrained=True)
+        self.model.fc = nn.Linear(512, num_classes)
     def forward(self, x):
-        """
-        1. 위에서 정의한 모델 아키텍쳐를 forward propagation 을 진행해주세요
-        2. 결과로 나온 output 을 return 해주세요
-        """
-        return x
+        return self.model(x)
+
+class resnet34(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.resnet34(pretrained=True)
+        self.model.fc = nn.Linear(512, num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+class resnet50(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.resnet50(pretrained=True)
+        self.model.fc = nn.Linear(512*4, num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+class resnet101(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.resnet101(pretrained=True)
+        self.model.fc = nn.Linear(512*4, num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+
+class resnet152(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.resnet152(pretrained=True)
+        self.model.fc = nn.Linear(512*4, num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+
+class resnext50_32x4d(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.resnext50_32x4d(pretrained=True)
+        self.model.fc = nn.Linear(512*4, num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+class resnext101_32x8d(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.resnext101_32x8d(pretrained=True)
+        self.model.fc = nn.Linear(512*4, num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+
+class wide_resnet50_2(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.wide_resnet50_2(pretrained=True)
+        self.model.fc = nn.Linear(512*4, num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+class wide_resnet101_2(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model=torchvision.models.wide_resnet101_2(pretrained=True)
+        self.model.fc = nn.Linear(512*4, num_classes)
+    def forward(self, x):
+        return self.model(x)
+
