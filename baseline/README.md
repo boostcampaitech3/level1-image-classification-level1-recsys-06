@@ -42,17 +42,26 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 <summary>Available Models</summary>
 <div markdown="1">
 <br>
+
 - resnet18
 - resnet34
+- resnet50
+- resnet101
 - resnet152
+- resnext50_32x4d
+- resnext101_32x8d
+- wide_resnet50_2
+- wide_resnet101_2
+- vgg11
+- vgg11_bn
+- vgg13
+- vgg13_bn
+- vgg16
+- vgg16_bn
 - vgg19
+- vgg19_bn
 - alexnet
-- densenet161
-- googlebet
-- efficientnet_b0
-- efficientnet_b4
-- efficientnet_b7
-- vit (resize to 224 224)
+
 </div>
 </details>
 <br>
@@ -70,18 +79,29 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 </details>
 <br>
 
-|Model|epoch|batch_size|baseline|leaderboard|
-|-----|-----|----------|-------|------------|
-|resnet152       |20|64| 71.93 |
-|vgg19           |20|64| 73.33 |62.8095|
-|densenet161     |20|64| 72.94 |
-|alexnet         |20|64| 68.36 |47.9841|
-|googlenet       |20|64| 66.77 |46.9683|
-|efficientnet_b0 |20|64| 60.63 |
-|efficientnet_b4 |20|64| 55.58 |
-|efficientnet_b7 |20|64| 54.05 |33.8889|
-|vit             |20|64| 74.55 |
-* used [128,96] resize except vit(used [224,224] resize )
+|Model|epoch|batch_size|val_acc|board_f1|board_acc|
+|-----|-----|----------|-------|------------|----|
+|resnet18          |1|64| 42.35 |
+|resnet34          |1|64| 42.43 | 
+|resnet50          |1|64| 40.79 |
+|resnet101         |1|64| 43.94 |
+|resnet152         |1|64| 42.25 | 0.1322|	36.5556|
+|resnext50_32x4d   |1|64| 42.12 |
+|resnext101_32x8d  |1|64| 47.51 |
+|wide_resnet50_2   |1|64| 38.57 |
+|wide_resnet101_2  |1|64| 38.23 | 0.0919|	30.1587|
+|vgg11             |1|64| 52.33 |
+|vgg11_bn          |1|64| 27.75 |
+|vgg13             |1|64| 55.03 |
+|vgg13_bn          |1|64| 28.36 |
+|vgg16             |1|64| 57.14 | 0.4165|	58.1587|
+|vgg16_bn          |1|64| 27.12 |
+|vgg19             |1|64| 58.99 |
+|vgg19_bn          |1|64| 27.59 | 0.0394|	18.1905|
+|alexnet           |1|64| 43.23 | 0.1974|	41.1270|
+
+- batchnorm 이 추가된 모델들이 성능이 좋지 않았다.
+
 
 
 
