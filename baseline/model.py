@@ -255,3 +255,43 @@ class alexnet(nn.Module):
 
     def forward(self, x):
         return self.model(x)
+
+#ViT
+
+class vit(nn.Module):
+    def __init__(self, num_classes,image_size):
+        super().__init__()
+        self.model=vit_pytorch.ViT( 
+            image_size = image_size,
+            patch_size = 32,
+            num_classes = num_classes,
+            dim = 1024,
+            depth = 6,
+            heads = 16,
+            mlp_dim = 2048,
+            dropout = 0.1,
+            emb_dropout = 0.1)
+
+    def forward(self, x):
+        return self.model(x)
+
+from vit_pytorch.deepvit import DeepViT
+
+class deepvit(nn.Module):
+    def __init__(self, num_classes,image_size):
+        super().__init__()
+        self.model=DeepViT(
+        image_size = image_size,
+        patch_size = 32,
+        num_classes = num_classes,
+        dim = 1024,
+        depth = 6,
+        heads = 8,
+        mlp_dim = 2048,
+        dropout = 0.1,
+        emb_dropout = 0.1
+)
+
+    def forward(self, x):
+        return self.model(x)
+
