@@ -1,15 +1,13 @@
-from collections import OrderedDict
-from torch import Tensor
-import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torchvision
 from efficientnet_pytorch import EfficientNet
 
 # Custom Model Template
 
+
+#DenseNet
 class densenet121(nn.Module):
-    def __init__(self, num_classes=18):
+    def __init__(self, num_classes):
         super().__init__()
 
         self.model = torchvision.models.densenet121(pretrained=True)
@@ -19,7 +17,7 @@ class densenet121(nn.Module):
         return self.model(x)
 
 class densenet161(nn.Module):
-    def __init__(self, num_classes=18):
+    def __init__(self, num_classes):
         super().__init__()
 
         self.model = torchvision.models.densenet161(pretrained=True)
@@ -29,7 +27,7 @@ class densenet161(nn.Module):
         return self.model(x)
 
 class densenet169(nn.Module):
-    def __init__(self, num_classes=18):
+    def __init__(self, num_classes):
         super().__init__()
 
         self.model = torchvision.models.densenet169(pretrained=True)
@@ -39,7 +37,7 @@ class densenet169(nn.Module):
         return self.model(x)
 
 class densenet201(nn.Module):
-    def __init__(self, num_classes=18):
+    def __init__(self, num_classes):
         super().__init__()
 
         self.model = torchvision.models.densenet201(pretrained=True)
@@ -49,7 +47,8 @@ class densenet201(nn.Module):
         return self.model(x)
 
 
-## Efficientnet
+# EfficientNet
+
 class efficientnet_b0(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
@@ -123,6 +122,7 @@ class efficientnet_b7(nn.Module):
         return self.model(x)
 
 
+#GoogLeNet
 
 class googlenet(nn.Module):
     
