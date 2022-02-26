@@ -130,9 +130,18 @@ def train(data_dir, model_dir, args):
 
     # -- model
     model_module = getattr(import_module("model"), args.model)  # default: BaseModel
-    model = model_module(
-        num_classes=num_classes
-    ).to(device)
+    
+    if "vit" in args.model:
+        print(max(args.resize))
+        model = model_module(
+            num_classes=num_classes,
+            image_size=max(args.resize)
+        ).to(device)
+    else:
+        model = model_module(
+            num_classes=num_classes
+        ).to(device)
+
     model = torch.nn.DataParallel(model)
 
     # -- loss & metric
