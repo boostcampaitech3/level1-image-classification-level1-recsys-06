@@ -1,38 +1,117 @@
 import torch.nn as nn
-import torch.nn.functional as F
+import torchvision
+from efficientnet_pytorch import EfficientNet
+
+# Custom Model Template
 
 
-class BaseModel(nn.Module):
+#DenseNet
+class densenet121(nn.Module):
     def __init__(self, num_classes):
         super().__init__()
-
-        self.conv1 = nn.Conv2d(3, 32, kernel_size=7, stride=1)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, stride=1)
-        self.conv3 = nn.Conv2d(64, 128, kernel_size=3, stride=1)
-        self.dropout1 = nn.Dropout(0.25)
-        self.dropout2 = nn.Dropout(0.25)
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = nn.Linear(128, num_classes)
-
+        self.model = torchvision.models.densenet121(pretrained=True)
+        self.model.classifier = nn.Linear(1024, num_classes)
     def forward(self, x):
-        x = self.conv1(x)
-        x = F.relu(x)
+        return self.model(x)
 
-        x = self.conv2(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, 2)
-        x = self.dropout1(x)
+class densenet161(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = torchvision.models.densenet161(pretrained=True)
+        self.model.classifier = nn.Linear(2208, num_classes)
+    def forward(self, x):
+        return self.model(x)
 
-        x = self.conv3(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, 2)
-        x = self.dropout2(x)
+class densenet169(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = torchvision.models.densenet169(pretrained=True)
+        self.model.classifier = nn.Linear(1664, num_classes)
+    def forward(self, x):
+        return self.model(x)
 
-        x = self.avgpool(x)
-        x = x.view(-1, 128)
-        return self.fc(x)
+class densenet201(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = torchvision.models.densenet201(pretrained=True)
+        self.model.classifier = nn.Linear(1920, num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+    
+# EfficientNet
+
+class efficientnet_b0(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = EfficientNet.from_pretrained('efficientnet-b0',num_classes=num_classes)
+    def forward(self, x):
+        return self.model(x)
+    
+class efficientnet_b1(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = EfficientNet.from_pretrained('efficientnet-b1',num_classes=num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+class efficientnet_b2(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = EfficientNet.from_pretrained('efficientnet-b2',num_classes=num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+class efficientnet_b3(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = EfficientNet.from_pretrained('efficientnet-b3',num_classes=num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+class efficientnet_b4(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = EfficientNet.from_pretrained('efficientnet-b4',num_classes=num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+class efficientnet_b5(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = EfficientNet.from_pretrained('efficientnet-b5',num_classes=num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+class efficientnet_b6(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = EfficientNet.from_pretrained('efficientnet-b6',num_classes=num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+class efficientnet_b7(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = EfficientNet.from_pretrained('efficientnet-b7',num_classes=num_classes)
+    def forward(self, x):
+        return self.model(x)
 
 
+#GoogLeNet
+
+class googlenet(nn.Module):
+    
+    def __init__(self, num_classes):
+        super().__init__()
+        self.model = torchvision.models.googlenet(pretrained=True)
+        self.model.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.model.dropout = nn.Dropout(0.2)
+        self.model.fc = nn.Linear(1024, num_classes)
+    def forward(self, x):
+        return self.model(x)
+
+    
 # Resnet
 
 class resnet18(nn.Module):
@@ -107,6 +186,7 @@ class wide_resnet101_2(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+    
 #VGG
 
 class vgg11(nn.Module):
@@ -237,6 +317,7 @@ class vgg19_bn(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+    
 #AlexNet
 
 class alexnet(nn.Module):
@@ -256,6 +337,7 @@ class alexnet(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+    
 #ViT
 
 class vit(nn.Module):
@@ -295,3 +377,6 @@ class deepvit(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+    
+    
+    
