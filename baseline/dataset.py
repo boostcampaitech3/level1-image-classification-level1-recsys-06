@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset, Subset, random_split
-from torchvision.transforms import Resize, ToTensor, Normalize, Compose, CenterCrop, ColorJitter
+from torchvision.transforms import Resize, ToTensor, Normalize, Compose, CenterCrop, ColorJitter, RandomHorizontalFlip, RandomPerspective
 
 IMG_EXTENSIONS = [
     ".jpg", ".JPG", ".jpeg", ".JPEG", ".png",
@@ -63,6 +63,35 @@ class CustomAugmentation:
     def __call__(self, image):
         return self.transform(image)
 
+
+class CustomAugm_train:
+    def __init__(self, resize, mean, std, **args):
+
+        self.transform = Compose([              # 기타 추가 가능한 것 (검토) : ShiftScaleRotate, HueSaturationValue, RandomBrightnessContrast
+            CenterCrop((320, 256)),
+            RandomHorizontalFlip(p=0.3), # randomly H_flip images
+            Resize(resize, Image.BILINEAR),
+            ColorJitter(brightness=0.5), # randomly change color space
+            RandomPerspective(distortion_scale=0.6, p=1.0),
+            Normalize(mean=mean, std=std),
+            AddGaussianNoise(),
+            ToTensor(),
+        ])
+
+    def __call__(self, image):
+        return self.transform(image)
+
+class CustomAugm_val:
+    def __init__(self, resize, mean, std, **args):
+        self.transform = Compose([
+            CenterCrop((320, 256)),
+            Resize(resize, Image.BILINEAR),
+            ToTensor(),
+            Normalize(mean=mean, std=std),
+        ])
+
+    def __call__(self, image):
+        return self.transform(image)
 
 class MaskLabels(int, Enum):
     MASK = 0
@@ -171,7 +200,7 @@ class MaskBaseDataset(Dataset):
             self.mean = np.mean(sums, axis=0) / 255
             self.std = (np.mean(squared, axis=0) - self.mean ** 2) ** 0.5 / 255
 
-    def set_transform(self, transform):
+    def set_transform(self, transform, mode='both'):
         self.transform = transform
 
     def __getitem__(self, index):
@@ -222,7 +251,7 @@ class MaskBaseDataset(Dataset):
         img_cp = np.clip(img_cp, 0, 255).astype(np.uint8)
         return img_cp
 
-    def split_dataset(self) -> Tuple[Subset, Subset]:
+    def split_dataset(self) : #-> Tuple[Subset, Subset]:
         """
         데이터셋을 train 과 val 로 나눕니다,
         pytorch 내부의 torch.utils.data.random_split 함수를 사용하여
@@ -297,6 +326,7 @@ class TestDataset(Dataset):
     def __init__(self, img_paths, resize, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246)):
         self.img_paths = img_paths
         self.transform = Compose([
+            CenterCrop((320, 256)),
             Resize(resize, Image.BILINEAR),
             ToTensor(),
             Normalize(mean=mean, std=std),
