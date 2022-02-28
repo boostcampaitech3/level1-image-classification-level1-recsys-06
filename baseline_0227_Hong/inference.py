@@ -12,16 +12,9 @@ from dataset import TestDataset, MaskBaseDataset
 
 def load_model(saved_model, num_classes, device):
     model_cls = getattr(import_module("model"), args.model)
-    if "vit" in args.model:
-        print(max(args.resize))
-        model = model_cls(
-            num_classes=num_classes,
-            image_size=max(args.resize)
-        )
-    else:
-        model = model_cls(
-            num_classes=num_classes
-        )
+    model = model_cls(
+        num_classes=num_classes
+    )
 
     # tarpath = os.path.join(saved_model, 'best.tar.gz')
     # tar = tarfile.open(tarpath, 'r:gz')
@@ -78,14 +71,18 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Data and model checkpoints directories
-    parser.add_argument('--batch_size', type=int, default=1000, help='input batch size for validing (default: 1000)')
-    parser.add_argument('--resize', type=int, default=(96, 128), help='resize size for image when you trained (default: (96, 128))')
-    parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
+    parser.add_argument('--batch_size', type=int, default=100, help='input batch size for validing (default: 1000)')
+    # parser.add_argument('--resize', type=tuple, default=(96, 128), help='resize size for image when you trained (default: (96, 128))')
+    parser.add_argument('--resize', type=tuple, default=(384, 512), help='resize size for image when you trained (default: (96, 128))')
+
+    # parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
+    parser.add_argument('--model', type=str, default='resnet18', help='model type (default: BaseModel)')
+    
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_EVAL', '/opt/ml/input/data/eval'))
-    parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_CHANNEL_MODEL', './model/exp'))
-    parser.add_argument('--output_dir', type=str, default=os.environ.get('SM_OUTPUT_DATA_DIR', './output'))
+    parser.add_argument('--model_dir', type=str, default=os.environ.get('SM_CHANNEL_MODEL','./model/exp_customaug_basemodel2')) #'./model/exp'))  # MaskSplitByProfileDataset')) #
+    parser.add_argument('--output_dir', type=str, default=os.environ.get('SM_OUTPUT_DATA_DIR', './exp_customaug_resnet18'))
 
     args = parser.parse_args()
 
