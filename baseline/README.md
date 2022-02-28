@@ -60,19 +60,6 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 - vgg19
 - vgg19_bn
 - alexnet
-- densenet121
-- densenet161
-- densenet169
-- densenet201
-- efficientnet_b0
-- efficientnet_b1
-- efficientnet_b2
-- efficientnet_b3
-- efficientnet_b4
-- efficientnet_b5
-- efficientnet_b6
-- efficientnet_b7
-- googlenet
 
 </div>
 </details>
@@ -111,22 +98,9 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 |vgg19             |1|64| 58.99 | 0.4325|	58.7937|
 |vgg19_bn          |1|64| 27.59 | 0.0394|	18.1905|
 |alexnet           |1|64| 43.23 | 0.1974|	41.1270|
-|densenet121       |1|64| 46.11 |
-|densenet161       |1|64| 43.49 |
-|densenet169       |1|64| 46.46 |
-|densenet201       |1|64| 46.64 |
-|efficientnet_b0   |1|64| 27.59 |
-|efficientnet_b1   |1|64| 20.40 |
-|efficientnet_b2   |1|64| 19.63 |
-|efficientnet_b3   |1|64| 22.12 |
-|efficientnet_b4   |1|64| 16.02 |
-|efficientnet_b5   |1|64| 13.78 |
-|efficientnet_b6   |1|64| 9.42  |
-|efficientnet_b7   |1|64| 11.69 |
-|googlenet         |1|64| 28.68 |
-
 
 - batch norm 이 추가된 모델들이 성능이 좋지 않았다.
+
 
 
 
