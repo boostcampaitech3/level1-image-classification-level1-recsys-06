@@ -1,6 +1,8 @@
 import torch.nn as nn
 import torchvision
 from efficientnet_pytorch import EfficientNet
+import torch
+import math
 
 # Custom Model Template
 
@@ -380,3 +382,7 @@ class deepvit(nn.Module):
     
     
     
+def init_weight(self, layer):
+        torch.nn.init.xavier_uniform_(layer.weight)
+        stdv = 1.0 / math.sqrt(layer.weight.size(1))
+        layer.bias.data.uniform_(-stdv, stdv)
