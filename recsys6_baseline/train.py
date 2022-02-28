@@ -11,6 +11,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from torch.autograd import Variable
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -80,6 +81,27 @@ def increment_path(path, exist_ok=False):
         i = [int(m.groups()[0]) for m in matches if m]
         n = max(i) + 1 if i else 2
         return f"{path}{n}"
+
+
+def mixup_data(x, y, alpha = 1.0, use_cuda = True):
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else :
+        lam = 1
+    batch_size = x.size()[0]
+    if use_cuda:
+        index = torch.randperm(batch_size).cuda()
+        #print(f'y : {y} || index : {index}')
+    else:
+        index = torch.randperm(batch_size)
+    
+    mixed_x = lam * x + (1-lam)*x[index, :]
+    y_a, y_b = y, y[index]
+
+    return mixed_x, y_a, y_b, lam
+
+def mixup_criterion(criterion, pred, y_a, y_b, lam):
+    return lam*criterion(pred, y_a) + (1-lam)*criterion(pred, y_b)
 
 
 def train(data_dir, model_dir, args):
@@ -159,20 +181,30 @@ def train(data_dir, model_dir, args):
         matches = 0
         for idx, train_batch in enumerate(train_loader):
             inputs, labels = train_batch
+            #print(f"inputs -> shape : {inputs.shape} inputs : {inputs} || labels : {labels.shape} , {labels}")
             inputs = inputs.to(device)
             labels = labels.to(device)
 
-            optimizer.zero_grad()
+            inputs, labels_a, labels_b, lam = mixup_data(inputs, labels, 0.7, use_cuda)
+            inputs, labels_a, labels_b = map(Variable, (inputs, labels_a, labels_b))
+
+
+           # optimizer.zero_grad()
 
             outs = model(inputs)
-            preds = torch.argmax(outs, dim=-1)
-            loss = criterion(outs, labels)
+            loss = mixup_criterion(criterion, outs, labels_a, labels_b, lam)
 
+            loss_value += loss.item()
+            preds = torch.argmax(outs, dim=-1)
+            #loss = criterion(outs, labels)
+            matches += (lam*(preds == labels_a).sum().item() + (1-lam)*(preds == labels_b).sum().item())
+
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            loss_value += loss.item()
-            matches += (preds == labels).sum().item()
+            #loss_value += loss.item()
+            #matches += (preds == labels).sum().item()
             if (idx + 1) % args.log_interval == 0:
                 train_loss = loss_value / args.log_interval
                 train_acc = matches / args.batch_size / args.log_interval
