@@ -81,6 +81,83 @@ def increment_path(path, exist_ok=False):
         n = max(i) + 1 if i else 2
         return f"{path}{n}"
 
+def ensembling(models,num_classes,device):
+    if len(models)==2:
+        print('ENSEMBLING..{0},{1}'.format(models[0],models[1]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
+
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+        
+        model_module=getattr(import_module("ensemble"), 'myensemble2')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            num_classes=num_classes
+        ).to(device)
+
+    elif len(models)==3:
+        print('ENSEMBLING..{0},{1},{2}'.format(models[0],models[1],models[2]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        model_module3 = getattr(import_module("model"), models[2])
+        
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
+
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+
+        model3 = model_module3(
+            num_classes=num_classes,
+        ).to(device)
+        model_module=getattr(import_module("ensemble"), 'myensemble3')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            modelC=model3,
+            num_classes=num_classes
+        ).to(device)
+    elif len(models)==4:
+        print('ENSEMBLING..{0},{1},{2},{3}'.format(models[0],models[1],models[2],models[3]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        model_module3 = getattr(import_module("model"), models[2])
+        model_module4 = getattr(import_module("model"), models[3])
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
+
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+
+        model3 = model_module3(
+            num_classes=num_classes,
+        ).to(device)
+        model4 = model_module4(
+            num_classes=num_classes,
+        ).to(device)
+        model_module=getattr(import_module("ensemble"), 'myensemble4')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            modelC=model3,
+            modelD=model4,
+            num_classes=num_classes
+        ).to(device)
+    return model
 
 def train(data_dir, model_dir, args):
     seed_everything(args.seed)
@@ -137,6 +214,8 @@ def train(data_dir, model_dir, args):
             num_classes=num_classes,
             image_size=max(args.resize)
         ).to(device)
+    elif args.ensemble:
+        model=ensembling(args.ensemble,num_classes,device)
     else:
         model = model_module(
             num_classes=num_classes
