@@ -1,5 +1,8 @@
+from turtle import forward
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
+import math
 
 
 class BaseModel(nn.Module):
@@ -49,4 +52,46 @@ class MyModel(nn.Module):
         1. 위에서 정의한 모델 아키텍쳐를 forward propagation 을 진행해주세요
         2. 결과로 나온 output 을 return 해주세요
         """
+        return x
+
+
+## Weight Initialization
+# xavier uniform : 이전 노드와 다음 노드의 개수에 의존하는 초기화 방법
+def fc_xavier_uniform(layer):
+    nn.init.xavier_uniform_(layer.weight)
+    stdv = 1. / math.sqrt(layer.weight.size(1))
+    layer.bias.data.uniform_(-stdv, stdv)
+
+
+# Pretrained model
+class Resnet18(nn.Module):
+    def __init__(self, num_classes):
+        super(Resnet18, self).__init__()
+
+        self.model = torchvision.models.resnet18(pretrained=True)
+        self.fc1 = nn.Linear(512, 512, bias=True)
+        fc_xavier_uniform(self.fc1)
+        
+        self.fc2 = nn.Linear(512, num_classes, bias=True)
+        fc_xavier_uniform(self.fc2)
+
+        self.dropout = nn.Dropout(0.3)
+
+    def forward(self, x):
+        x = self.model.conv1(x)
+        x = self.model.bn1(x)
+        x = self.model.relu(x)
+        x = self.model.maxpool(x)
+
+        x = self.model.layer1(x)
+        x = self.model.layer2(x)
+        x = self.model.layer3(x)
+        x = self.model.layer4(x)
+        x = self.model.avgpool(x)
+    
+        x = x.view(x.size(0), -1)
+        x = F.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = self.fc2(x)
+
         return x
