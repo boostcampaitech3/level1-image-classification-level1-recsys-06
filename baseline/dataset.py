@@ -200,7 +200,7 @@ class MaskBaseDataset(Dataset):
             self.mean = np.mean(sums, axis=0) / 255
             self.std = (np.mean(squared, axis=0) - self.mean ** 2) ** 0.5 / 255
 
-    def set_transform(self, transform, mode='both'):
+    def set_transform(self, transform):
         self.transform = transform
 
     def __getitem__(self, index):
