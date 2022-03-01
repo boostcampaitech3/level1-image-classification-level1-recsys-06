@@ -247,6 +247,7 @@ def train(data_dir, model_dir, args):
 
     best_val_acc = 0
     best_val_loss = np.inf
+    cnt=0
     for epoch in range(args.epochs):
         # train loop
         model.train()
@@ -313,12 +314,11 @@ def train(data_dir, model_dir, args):
 
             val_loss = np.sum(val_loss_items) / len(val_loader)
             val_acc = np.sum(val_acc_items) / len(val_set)
-            best_val_loss = min(best_val_loss, val_loss)
-            if val_acc > best_val_acc:
-                print(f"New best model for val accuracy : {val_acc:4.2%}! saving the best model..")
-                torch.save(model.module.state_dict(), f"{save_dir}/best.pth")
-                best_val_acc = val_acc
-            torch.save(model.module.state_dict(), f"{save_dir}/last.pth")
+            best_val_acc=max(best_val_acc,val_acc)
+            
+            import earlystopping
+            earlystop=earlystopping.EarlyStopping(patience=args.patience,delta=args.delta)
+            best_val_loss,cnt=earlystop(best_val_loss,val_loss,model,save_dir,cnt)
             print(
                 f"[Val] acc : {val_acc:4.2%}, loss: {val_loss:4.2} || "
                 f"best acc : {best_val_acc:4.2%}, best loss: {best_val_loss:4.2}"
@@ -327,7 +327,9 @@ def train(data_dir, model_dir, args):
             logger.add_scalar("Val/accuracy", val_acc, epoch)
             logger.add_figure("results", figure, epoch)
             print()
-
+            if earlystop.early_stop:
+                print('EARLY STOPPED!')
+                break
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -349,6 +351,9 @@ if __name__ == '__main__':
     parser.add_argument('--lr_decay_step', type=int, default=20, help='learning rate scheduler deacy step (default: 20)')
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
     parser.add_argument('--name', default='exp_0228_a', help='model save at {SM_MODEL_DIR}/{name}')  # Tensorboard에 저장되는 이름
+    parser.add_argument('--ensemble', nargs="+", type=str, default=0,help="ensemble model names")
+    parser.add_argument('--patience', type=int, default=5,help="early_stopping patience")
+    parser.add_argument('--delta', type=float, default=0,help="early_stopping delta")
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
