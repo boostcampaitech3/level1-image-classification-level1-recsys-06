@@ -81,6 +81,7 @@ def increment_path(path, exist_ok=False):
         n = max(i) + 1 if i else 2
         return f"{path}{n}"
 
+
 def ensembling(models,num_classes,device):
     if len(models)==2:
         print('ENSEMBLING..{0},{1}'.format(models[0],models[1]))
@@ -159,6 +160,18 @@ def ensembling(models,num_classes,device):
         ).to(device)
     return model
 
+def set_augment(data_subset_, mode, dataset):
+    transform_module = getattr(import_module("dataset"), mode) # args.augment_train)  # default: BaseAugmentation
+    transform = transform_module(
+        resize=args.resize,
+        mean=dataset.mean,
+        std=dataset.std,
+    )
+    data_subset_.dataset.set_transform(transform) 
+    return data_subset_
+
+
+
 def train(data_dir, model_dir, args):
     seed_everything(args.seed)
 
@@ -175,18 +188,11 @@ def train(data_dir, model_dir, args):
     )
     num_classes = dataset.num_classes  # 18
 
-    # -- augmentation
-    transform_module = getattr(import_module("dataset"), args.augmentation)  # default: BaseAugmentation
-    transform = transform_module(
-        resize=args.resize,
-        mean=dataset.mean,
-        std=dataset.std,
-    )
-    dataset.set_transform(transform)
-
     # -- data_loader
     train_set, val_set = dataset.split_dataset()
 
+    # -- augmentation
+    train_set = set_augment(train_set, args.augment_train, dataset)
     train_loader = DataLoader(
         train_set,
         batch_size=args.batch_size,
@@ -196,6 +202,7 @@ def train(data_dir, model_dir, args):
         drop_last=True,
     )
 
+    val_set = set_augment(val_set, args.augment_valid, dataset)
     val_loader = DataLoader(
         val_set,
         batch_size=args.valid_batch_size,
@@ -225,7 +232,7 @@ def train(data_dir, model_dir, args):
 
     # -- loss & metric
     criterion = create_criterion(args.criterion)  # default: cross_entropy
-    opt_module = getattr(import_module("torch.optim"), args.optimizer)  # default: SGD
+    opt_module = getattr(import_module("torch.optim"), args.optimizer)  # default: SGD  
     optimizer = opt_module(
         filter(lambda p: p.requires_grad, model.parameters()),
         lr=args.lr,
@@ -327,20 +334,21 @@ if __name__ == '__main__':
 
     # Data and model checkpoints directories
     parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
-    parser.add_argument('--epochs', type=int, default=1, help='number of epochs to train (default: 1)')
+    parser.add_argument('--epochs', type=int, default=20, help='number of epochs to train (default: 1)')
     parser.add_argument('--dataset', type=str, default='MaskBaseDataset', help='dataset augmentation type (default: MaskBaseDataset)')
-    parser.add_argument('--augmentation', type=str, default='BaseAugmentation', help='data augmentation type (default: BaseAugmentation)')
-    parser.add_argument("--resize", nargs="+", type=int, default=[128, 96], help='resize size for image when training')
-    parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
-    parser.add_argument('--valid_batch_size', type=int, default=1000, help='input batch size for validing (default: 1000)')
-    parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
-    parser.add_argument('--optimizer', type=str, default='SGD', help='optimizer type (default: SGD)')
+    parser.add_argument('--augment_train', type=str, default='CustomAugm_train', help='data augmentation type (default: BaseAugmentation)')
+    parser.add_argument('--augment_valid', type=str, default='CustomAugm_val', help='data augmentation type (default: BaseAugmentation)')
+    parser.add_argument("--resize", nargs="+", type=list, default=[512, 384], help='resize size for image when training')   
+    parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)') 
+    parser.add_argument('--valid_batch_size', type=int, default=100, help='input batch size for validing (default: 1000)')
+    parser.add_argument('--model', type=str, default='resnet18', help='model type (default: BaseModel)')
+    parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer type (default: SGD)')
     parser.add_argument('--lr', type=float, default=1e-3, help='learning rate (default: 1e-3)')
     parser.add_argument('--val_ratio', type=float, default=0.2, help='ratio for validaton (default: 0.2)')
     parser.add_argument('--criterion', type=str, default='cross_entropy', help='criterion type (default: cross_entropy)')
     parser.add_argument('--lr_decay_step', type=int, default=20, help='learning rate scheduler deacy step (default: 20)')
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
-    parser.add_argument('--name', default='exp', help='model save at {SM_MODEL_DIR}/{name}')
+    parser.add_argument('--name', default='exp_0228_a', help='model save at {SM_MODEL_DIR}/{name}')  # Tensorboard에 저장되는 이름
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
