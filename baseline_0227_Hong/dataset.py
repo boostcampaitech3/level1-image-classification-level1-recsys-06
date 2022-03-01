@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import Dataset, Subset, random_split
-from torchvision.transforms import Resize, ToTensor, Normalize, Compose, CenterCrop, ColorJitter, RandomHorizontalFlip, RandomPerspective
+from torchvision.transforms import Resize, ToTensor, Normalize, Compose, CenterCrop, ColorJitter
 
 IMG_EXTENSIONS = [
     ".jpg", ".JPG", ".jpeg", ".JPEG", ".png",
@@ -64,34 +64,20 @@ class CustomAugmentation:
         return self.transform(image)
 
 
-class CustomAugm_train:
-    def __init__(self, resize, mean, std, **args):
-
-        self.transform = Compose([              # 기타 추가 가능한 것 (검토) : ShiftScaleRotate, HueSaturationValue, RandomBrightnessContrast
-            CenterCrop((320, 256)),
-            RandomHorizontalFlip(p=0.3), # randomly H_flip images
-            Resize(resize, Image.BILINEAR),
-            ColorJitter(brightness=0.5), # randomly change color space
-            RandomPerspective(distortion_scale=0.6, p=1.0),
-            Normalize(mean=mean, std=std),
-            AddGaussianNoise(),
-            ToTensor(),
-        ])
-
-    def __call__(self, image):
-        return self.transform(image)
-
-class CustomAugm_val:
+class CustomAugmentation_v1:
     def __init__(self, resize, mean, std, **args):
         self.transform = Compose([
             CenterCrop((320, 256)),
             Resize(resize, Image.BILINEAR),
+            #ColorJitter(0.1, 0.1, 0.1, 0.1),
             ToTensor(),
             Normalize(mean=mean, std=std),
+            #AddGaussianNoise()
         ])
 
     def __call__(self, image):
         return self.transform(image)
+
 
 class MaskLabels(int, Enum):
     MASK = 0
@@ -251,7 +237,7 @@ class MaskBaseDataset(Dataset):
         img_cp = np.clip(img_cp, 0, 255).astype(np.uint8)
         return img_cp
 
-    def split_dataset(self) : #-> Tuple[Subset, Subset]:
+    def split_dataset(self) -> Tuple[Subset, Subset]:
         """
         데이터셋을 train 과 val 로 나눕니다,
         pytorch 내부의 torch.utils.data.random_split 함수를 사용하여
@@ -281,7 +267,7 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         length = len(profiles)
         n_val = int(length * val_ratio)
 
-        val_indices = set(random.sample(range(length), k=n_val))
+        val_indices = set(random.choices(range(length), k=n_val))
         train_indices = set(range(length)) - val_indices
         return {
             "train": train_indices,
@@ -326,7 +312,6 @@ class TestDataset(Dataset):
     def __init__(self, img_paths, resize, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246)):
         self.img_paths = img_paths
         self.transform = Compose([
-            CenterCrop((320, 256)),
             Resize(resize, Image.BILINEAR),
             ToTensor(),
             Normalize(mean=mean, std=std),
