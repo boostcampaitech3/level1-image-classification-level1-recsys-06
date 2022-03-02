@@ -258,7 +258,7 @@ class vgg13(nn.Module):
             nn.ReLU(True),
             nn.Dropout(),
             nn.Linear(4096, num_classes))
-            init_weight(self.model.classifier)
+        init_weight(self.model.classifier)
     def forward(self, x):
         return self.model(x)
 

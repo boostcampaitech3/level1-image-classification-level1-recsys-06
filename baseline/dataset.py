@@ -9,6 +9,7 @@ import torch
 from PIL import Image
 from torch.utils.data import Dataset, Subset, random_split
 from torchvision.transforms import Resize, ToTensor, Normalize, Compose, CenterCrop, ColorJitter, RandomHorizontalFlip, RandomPerspective
+from sklearn.model_selection import KFold
 
 IMG_EXTENSIONS = [
     ".jpg", ".JPG", ".jpeg", ".JPEG", ".png",
@@ -71,8 +72,8 @@ class CustomAugm_train:
             CenterCrop((320, 256)),
             RandomHorizontalFlip(p=0.3), # randomly H_flip images
             Resize(resize, Image.BILINEAR),
-            ColorJitter(brightness=0.5), # randomly change color space
-            RandomPerspective(distortion_scale=0.6, p=1.0),
+           # ColorJitter(brightness=0.2), # randomly change color space
+           # RandomPerspective(distortion_scale=0.4, p=0.2),
             Normalize(mean=mean, std=std),
             AddGaussianNoise(),
             ToTensor(),
@@ -261,7 +262,31 @@ class MaskBaseDataset(Dataset):
         n_val = int(len(self) * self.val_ratio)
         n_train = len(self) - n_val
         train_set, val_set = random_split(self, [n_train, n_val])
-        return train_set, val_set
+        data_set_list = []
+        data_set_list.append((0,train_set,val_set)) #fold = 0
+        return data_set_list
+
+    
+    
+
+
+class kfold(MaskBaseDataset):
+    
+    def __init__(self, data_dir, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246), val_ratio=0.2):
+        self.indices = defaultdict(list)
+        super().__init__(data_dir, mean, std, val_ratio)
+    
+    # Define the K-fold Cross Validator
+    def split_dataset(self):
+        kfold = KFold(n_splits=5, shuffle=True)
+        # K-fold Cross Validation model evaluation
+        data_set_list = []
+        for fold, (train_ids, val_ids) in enumerate(kfold.split(self)):
+            # Sample elements randomly from a given list of ids, no replacement.
+            train_set_list = Subset(self,train_ids)
+            val_set_list = Subset(self,val_ids)
+            data_set_list.append((fold,train_set_list,val_set_list))
+        return data_set_list
 
 
 class MaskSplitByProfileDataset(MaskBaseDataset):
@@ -319,8 +344,10 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
                     cnt += 1
 
     def split_dataset(self) -> List[Subset]:
-        return [Subset(self, indices) for phase, indices in self.indices.items()]
-
+        test_set,val_set = [Subset(self, indices) for phase, indices in self.indices.items()]
+        data_set_list = []
+        data_set_list.append((0,test_set,val_set))
+        return data_set_list
 
 class TestDataset(Dataset):
     def __init__(self, img_paths, resize, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246)):
@@ -341,3 +368,6 @@ class TestDataset(Dataset):
 
     def __len__(self):
         return len(self.img_paths)
+
+
+
