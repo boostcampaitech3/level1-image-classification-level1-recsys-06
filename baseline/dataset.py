@@ -345,7 +345,10 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
                     cnt += 1
 
     def split_dataset(self) -> List[Subset]:
-        return [Subset(self, indices) for phase, indices in self.indices.items()]
+        test_set,val_set = [Subset(self, indices) for phase, indices in self.indices.items()]
+        data_set_list = []
+        data_set_list.append((0,test_set,val_set))
+        return data_set_list
 
 
 class TestDataset(Dataset):

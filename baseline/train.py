@@ -120,20 +120,33 @@ def train(data_dir, model_dir, args):
             print(f'FOLD {fold}')
             print('--------------------------------')
         # Define data loaders for training and testing data in this fold
-        train_loader = torch.utils.data.DataLoader(
-                        dataset, 
-                        batch_size=args.batch_size,
-                        num_workers=multiprocessing.cpu_count() // 2,
-                        pin_memory=use_cuda,
-                        drop_last=True,
-                        sampler=train_set)
-        val_loader = torch.utils.data.DataLoader(
-                        dataset, 
-                        batch_size=args.batch_size,
-                        num_workers=multiprocessing.cpu_count() // 2,
-                        pin_memory=use_cuda,
-                        drop_last=True,
-                        sampler=val_set)
+            train_loader = torch.utils.data.DataLoader(
+                            dataset, 
+                            batch_size=args.batch_size,
+                            num_workers=multiprocessing.cpu_count() // 2,
+                            pin_memory=use_cuda,
+                            drop_last=True,
+                            sampler=train_set)
+            val_loader = torch.utils.data.DataLoader(
+                            dataset, 
+                            batch_size=args.batch_size,
+                            num_workers=multiprocessing.cpu_count() // 2,
+                            pin_memory=use_cuda,
+                            drop_last=True,
+                            sampler=val_set)
+        else:
+            train_loader = torch.utils.data.DataLoader(
+                            train_set, 
+                            batch_size=args.batch_size,
+                            num_workers=multiprocessing.cpu_count() // 2,
+                            pin_memory=use_cuda,
+                            drop_last=True)
+            val_loader = torch.utils.data.DataLoader(
+                            val_set, 
+                            batch_size=args.batch_size,
+                            num_workers=multiprocessing.cpu_count() // 2,
+                            pin_memory=use_cuda,
+                            drop_last=True)
         
         # -- model
         model_module = getattr(import_module("model"), args.model)  # default: BaseModel
@@ -256,6 +269,7 @@ def train(data_dir, model_dir, args):
         f"fold avg acc : {fold_avg_acc:4.2%}, fold avg loss: {fold_avg_loss:4.2} || "
         f"best acc : {best_val_acc:4.2%}, best loss: {best_val_loss:4.2}"
             )
+    print()
 
 
                 
