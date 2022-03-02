@@ -72,8 +72,8 @@ class CustomAugm_train:
             CenterCrop((320, 256)),
             RandomHorizontalFlip(p=0.3), # randomly H_flip images
             Resize(resize, Image.BILINEAR),
-            ColorJitter(brightness=0.5), # randomly change color space
-            RandomPerspective(distortion_scale=0.6, p=1.0),
+           # ColorJitter(brightness=0.2), # randomly change color space
+           # RandomPerspective(distortion_scale=0.4, p=0.2),
             Normalize(mean=mean, std=std),
             AddGaussianNoise(),
             ToTensor(),
@@ -348,7 +348,6 @@ class MaskSplitByProfileDataset(MaskBaseDataset):
         data_set_list = []
         data_set_list.append((0,test_set,val_set))
         return data_set_list
-
 
 class TestDataset(Dataset):
     def __init__(self, img_paths, resize, mean=(0.548, 0.504, 0.479), std=(0.237, 0.247, 0.246)):
