@@ -84,6 +84,16 @@ def increment_path(path, exist_ok=False):
         n = max(i) + 1 if i else 2
         return f"{path}{n}"
 
+def set_augment(data_subset_, mode, dataset):
+    transform_module = getattr(import_module("dataset"), mode) # args.augment_train)  # default: BaseAugmentation
+    transform = transform_module(
+        resize=args.resize,
+        mean=dataset.mean,
+        std=dataset.std,
+    )
+    data_subset_.dataset.set_transform(transform) 
+    return data_subset_
+
 
 def ensembling(models,num_classes,device):
     if len(models)==2:
