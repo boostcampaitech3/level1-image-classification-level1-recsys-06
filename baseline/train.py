@@ -82,6 +82,96 @@ def increment_path(path, exist_ok=False):
         return f"{path}{n}"
 
 
+def ensembling(models,num_classes,device):
+    if len(models)==2:
+        print('ENSEMBLING..{0},{1}'.format(models[0],models[1]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
+
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+        
+        model_module=getattr(import_module("ensemble"), 'myensemble2')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            num_classes=num_classes
+        ).to(device)
+
+    elif len(models)==3:
+        print('ENSEMBLING..{0},{1},{2}'.format(models[0],models[1],models[2]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        model_module3 = getattr(import_module("model"), models[2])
+        
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
+
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+
+        model3 = model_module3(
+            num_classes=num_classes,
+        ).to(device)
+        model_module=getattr(import_module("ensemble"), 'myensemble3')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            modelC=model3,
+            num_classes=num_classes
+        ).to(device)
+    elif len(models)==4:
+        print('ENSEMBLING..{0},{1},{2},{3}'.format(models[0],models[1],models[2],models[3]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        model_module3 = getattr(import_module("model"), models[2])
+        model_module4 = getattr(import_module("model"), models[3])
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
+
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+
+        model3 = model_module3(
+            num_classes=num_classes,
+        ).to(device)
+        model4 = model_module4(
+            num_classes=num_classes,
+        ).to(device)
+        model_module=getattr(import_module("ensemble"), 'myensemble4')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            modelC=model3,
+            modelD=model4,
+            num_classes=num_classes
+        ).to(device)
+    return model
+
+def set_augment(data_subset_, mode, dataset):
+    transform_module = getattr(import_module("dataset"), mode) # args.augment_train)  # default: BaseAugmentation
+    transform = transform_module(
+        resize=args.resize,
+        mean=dataset.mean,
+        std=dataset.std,
+    )
+    data_subset_.dataset.set_transform(transform) 
+    return data_subset_
+
+
+
 def train(data_dir, model_dir, args):
     seed_everything(args.seed)
 
@@ -97,56 +187,35 @@ def train(data_dir, model_dir, args):
         data_dir=data_dir,
     )
     num_classes = dataset.num_classes  # 18
-
-    # -- augmentation
-    transform_module = getattr(import_module("dataset"), args.augmentation)  # default: BaseAugmentation
-    transform = transform_module(
-        resize=args.resize,
-        mean=dataset.mean,
-        std=dataset.std,
-    )
-    dataset.set_transform(transform)
     
-
     
     best_val_acc = 0
     best_val_loss = np.inf
     fold_avg_acc = 0
     fold_avg_loss = 0
-
     data_set_list = dataset.split_dataset()
+    
+
     for fold,train_set,val_set in data_set_list:
         if 'kfold' in args.dataset:
             print(f'FOLD {fold}')
             print('--------------------------------')
         # Define data loaders for training and testing data in this fold
-            train_loader = torch.utils.data.DataLoader(
-                            dataset, 
-                            batch_size=args.batch_size,
-                            num_workers=multiprocessing.cpu_count() // 2,
-                            pin_memory=use_cuda,
-                            drop_last=True,
-                            sampler=train_set)
-            val_loader = torch.utils.data.DataLoader(
-                            dataset, 
-                            batch_size=args.batch_size,
-                            num_workers=multiprocessing.cpu_count() // 2,
-                            pin_memory=use_cuda,
-                            drop_last=True,
-                            sampler=val_set)
-        else:
-            train_loader = torch.utils.data.DataLoader(
-                            train_set, 
-                            batch_size=args.batch_size,
-                            num_workers=multiprocessing.cpu_count() // 2,
-                            pin_memory=use_cuda,
-                            drop_last=True)
-            val_loader = torch.utils.data.DataLoader(
-                            val_set, 
-                            batch_size=args.batch_size,
-                            num_workers=multiprocessing.cpu_count() // 2,
-                            pin_memory=use_cuda,
-                            drop_last=True)
+        train_set = set_augment(train_set, args.augment_train, dataset)
+        val_set = set_augment(val_set, args.augment_valid, dataset)
+        train_loader = torch.utils.data.DataLoader(
+                        train_set, 
+                        batch_size=args.batch_size,
+                        num_workers=multiprocessing.cpu_count() // 2,
+                        pin_memory=use_cuda,
+                        drop_last=True,)
+        val_loader = torch.utils.data.DataLoader(
+                        val_set,
+                        batch_size=args.valid_batch_size,
+                        num_workers=multiprocessing.cpu_count() // 2,
+                        shuffle=False,
+                        pin_memory=use_cuda,
+                        drop_last=True)
         
         # -- model
         model_module = getattr(import_module("model"), args.model)  # default: BaseModel
@@ -247,12 +316,11 @@ def train(data_dir, model_dir, args):
 
                 val_loss = np.sum(val_loss_items) / len(val_loader)
                 val_acc = np.sum(val_acc_items) / len(val_set)
-                best_val_loss = min(best_val_loss, val_loss)
-                if val_acc > best_val_acc:
-                    print(f"New best model for val accuracy : {val_acc:4.2%}! saving the best model..")
-                    torch.save(model.module.state_dict(), f"{save_dir}/best.pth")
-                    best_val_acc = val_acc
-                torch.save(model.module.state_dict(), f"{save_dir}/last.pth")
+                best_val_acc=max(best_val_acc,val_acc)
+                
+                import earlystopping
+                earlystop=earlystopping.EarlyStopping(patience=args.patience,delta=args.delta)
+                best_val_loss,cnt=earlystop(best_val_loss,val_loss,model,save_dir,cnt)
                 print(
                     f"[Val] acc : {val_acc:4.2%}, loss: {val_loss:4.2} || "
                     f"best acc : {best_val_acc:4.2%}, best loss: {best_val_loss:4.2}"
@@ -261,6 +329,9 @@ def train(data_dir, model_dir, args):
                 logger.add_scalar("Val/accuracy", val_acc, epoch)
                 logger.add_figure("results", figure, epoch)
                 print()
+                if earlystop.early_stop:
+                    print('EARLY STOPPED!')
+                    break
         fold_avg_acc += val_acc
         fold_avg_loss += val_loss
     fold_avg_acc /= (fold+1)
@@ -274,27 +345,31 @@ def train(data_dir, model_dir, args):
 
                 
 
-
+            
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     # Data and model checkpoints directories
     parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
-    parser.add_argument('--epochs', type=int, default=1, help='number of epochs to train (default: 1)')
+    parser.add_argument('--epochs', type=int, default=20, help='number of epochs to train (default: 1)')
     parser.add_argument('--dataset', type=str, default='MaskBaseDataset', help='dataset augmentation type (default: MaskBaseDataset)')
-    parser.add_argument('--augmentation', type=str, default='BaseAugmentation', help='data augmentation type (default: BaseAugmentation)')
-    parser.add_argument("--resize", nargs="+", type=int, default=[128, 96], help='resize size for image when training')
-    parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)')
-    parser.add_argument('--valid_batch_size', type=int, default=1000, help='input batch size for validing (default: 1000)')
-    parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
-    parser.add_argument('--optimizer', type=str, default='SGD', help='optimizer type (default: SGD)')
+    parser.add_argument('--augment_train', type=str, default='CustomAugm_train', help='data augmentation type (default: BaseAugmentation)')
+    parser.add_argument('--augment_valid', type=str, default='CustomAugm_val', help='data augmentation type (default: BaseAugmentation)')
+    parser.add_argument("--resize", nargs="+", type=int, default=[512, 384], help='resize size for image when training')   
+    parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)') 
+    parser.add_argument('--valid_batch_size', type=int, default=100, help='input batch size for validing (default: 1000)')
+    parser.add_argument('--model', type=str, default='resnet18', help='model type (default: BaseModel)')
+    parser.add_argument('--optimizer', type=str, default='Adam', help='optimizer type (default: SGD)')
     parser.add_argument('--lr', type=float, default=1e-3, help='learning rate (default: 1e-3)')
     parser.add_argument('--val_ratio', type=float, default=0.2, help='ratio for validaton (default: 0.2)')
     parser.add_argument('--criterion', type=str, default='cross_entropy', help='criterion type (default: cross_entropy)')
     parser.add_argument('--lr_decay_step', type=int, default=20, help='learning rate scheduler deacy step (default: 20)')
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
-    parser.add_argument('--name', default='exp', help='model save at {SM_MODEL_DIR}/{name}')
+    parser.add_argument('--name', default='exp_0228_a', help='model save at {SM_MODEL_DIR}/{name}')  # Tensorboard에 저장되는 이름
+    parser.add_argument('--ensemble', nargs="+", type=str, default=0,help="ensemble model names")
+    parser.add_argument('--patience', type=int, default=5,help="early_stopping patience")
+    parser.add_argument('--delta', type=float, default=0,help="early_stopping delta")
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))

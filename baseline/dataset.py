@@ -283,11 +283,10 @@ class kfold(MaskBaseDataset):
         data_set_list = []
         for fold, (train_ids, val_ids) in enumerate(kfold.split(self)):
             # Sample elements randomly from a given list of ids, no replacement.
-            train_set = torch.utils.data.SubsetRandomSampler(train_ids)
-            val_set = torch.utils.data.SubsetRandomSampler(val_ids)
-            data_set_list.append((fold,train_set,val_set))
+            train_set_list = Subset(self,train_ids)
+            val_set_list = Subset(self,val_ids)
+            data_set_list.append((fold,train_set_list,val_set_list))
         return data_set_list
-
 
 
 class MaskSplitByProfileDataset(MaskBaseDataset):
