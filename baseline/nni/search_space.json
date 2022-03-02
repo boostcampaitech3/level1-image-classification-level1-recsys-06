@@ -1,0 +1,4 @@
+{
+    "batch_size": {"_type":"choice", "_value": [16, 32, 64, 128]}
+
+}

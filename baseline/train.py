@@ -18,6 +18,9 @@ from torch.utils.tensorboard import SummaryWriter
 from dataset import MaskBaseDataset
 from loss import create_criterion
 
+import nni
+from nni.utils import merge_parameter
+from munch import munchify
 
 def seed_everything(seed):
     torch.manual_seed(seed)
@@ -326,10 +329,12 @@ def train(data_dir, model_dir, args):
             logger.add_scalar("Val/loss", val_loss, epoch)
             logger.add_scalar("Val/accuracy", val_acc, epoch)
             logger.add_figure("results", figure, epoch)
+            nni.report_intermediate_result(val_acc)
             print()
             if earlystop.early_stop:
                 print('EARLY STOPPED!')
                 break
+        nni.report_final_result(val_acc)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -361,6 +366,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print(args)
+
+    tuner_params=nni.get_next_parameter()
+    args=munch.munchify(merge_parameter(args,tuner_params))
 
     data_dir = args.data_dir
     model_dir = args.model_dir
