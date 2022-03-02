@@ -363,7 +363,6 @@ def train(data_dir, model_dir, args):
                 
 
             
-            
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
