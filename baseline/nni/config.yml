@@ -1,0 +1,12 @@
+searchSpaceFile: search_space.json
+trialCommand: python3 ../train.py   # NOTE: change "python3" to "python" if you are using Windows
+trialGpuNumber: 1
+trialConcurrency: 1
+maxTrialNumber: 10 # parameter 변경 시도 회수 
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+trainingService:
+  platform: local
+  useActiveGpu: True
