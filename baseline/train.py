@@ -13,11 +13,16 @@ import numpy as np
 import torch
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
+from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
-
-from dataset import MaskBaseDataset
+from sklearn.model_selection import KFold
+from dataset import MaskBaseDataset, kfold
 from loss import create_criterion
 
+import nni
+from nni.utils import merge_parameter
+import munch
+from munch import munchify
 
 def seed_everything(seed):
     torch.manual_seed(seed)
@@ -81,6 +86,85 @@ def increment_path(path, exist_ok=False):
         n = max(i) + 1 if i else 2
         return f"{path}{n}"
 
+
+def ensembling(models,num_classes,device):
+    if len(models)==2:
+        print('ENSEMBLING..{0},{1}'.format(models[0],models[1]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
+
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+        
+        model_module=getattr(import_module("ensemble"), 'myensemble2')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            num_classes=num_classes
+        ).to(device)
+
+    elif len(models)==3:
+        print('ENSEMBLING..{0},{1},{2}'.format(models[0],models[1],models[2]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        model_module3 = getattr(import_module("model"), models[2])
+        
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
+
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+
+        model3 = model_module3(
+            num_classes=num_classes,
+        ).to(device)
+        model_module=getattr(import_module("ensemble"), 'myensemble3')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            modelC=model3,
+            num_classes=num_classes
+        ).to(device)
+    elif len(models)==4:
+        print('ENSEMBLING..{0},{1},{2},{3}'.format(models[0],models[1],models[2],models[3]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        model_module3 = getattr(import_module("model"), models[2])
+        model_module4 = getattr(import_module("model"), models[3])
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
+
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+
+        model3 = model_module3(
+            num_classes=num_classes,
+        ).to(device)
+        model4 = model_module4(
+            num_classes=num_classes,
+        ).to(device)
+        model_module=getattr(import_module("ensemble"), 'myensemble4')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            modelC=model3,
+            modelD=model4,
+            num_classes=num_classes
+        ).to(device)
+    return model
+
 def set_augment(data_subset_, mode, dataset):
     transform_module = getattr(import_module("dataset"), mode) # args.augment_train)  # default: BaseAugmentation
     transform = transform_module(
@@ -88,9 +172,46 @@ def set_augment(data_subset_, mode, dataset):
         mean=dataset.mean,
         std=dataset.std,
     )
-    data_subset_.dataset.set_transform(transform) 
+   # data_subset_.dataset.set_transform(transform) 
     return data_subset_
 
+
+def mixup_data(x, y, alpha = 1.0, use_cuda = True):
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else :
+        return x, y
+    batch_size = x.size()[0]
+    
+    if use_cuda:
+        if((2 in y) | (5 in y) | (8 in y) | (11 in y) | (14 in y) | (17 in y)):
+            index = np.where((y.cpu()==2)|(y.cpu()==5)|(y.cpu()==8)|(y.cpu()==11)|(y.cpu()==14)|(y.cpu()==17))
+            index = list(index[0])
+            temp = index
+            while len(index) < batch_size:
+                if len(index) < batch_size - len(index):
+                    index.extend(index)
+                elif len(temp) <= batch_size - len(index):
+                    index.extend(temp)
+                else:
+                    for i in range(batch_size - len(index)):
+                        index.append(index[i])
+
+            index = np.array(index)
+            index = torch.from_numpy(index)
+            index = index.cuda()
+        else:
+            index = torch.randperm(batch_size).cuda()
+    else:
+        index = torch.randperm(batch_size)
+    
+    mixed_x = lam * x + (1-lam)*x[index, :]
+    y_a, y_b = y, y[index]
+    
+    return mixed_x, y_a, y_b, lam
+
+def mixup_criterion(criterion, pred, y_a, y_b, lam):
+    return lam*criterion(pred, y_a) + (1-lam)*criterion(pred, y_b)
 
 def train(data_dir, model_dir, args):
     seed_everything(args.seed)
@@ -107,145 +228,181 @@ def train(data_dir, model_dir, args):
         data_dir=data_dir,
     )
     num_classes = dataset.num_classes  # 18
-
-    # -- data_loader
-    train_set, val_set = dataset.split_dataset()
-
-    # -- augmentation
-    train_set = set_augment(train_set, args.augment_train, dataset)
-    train_loader = DataLoader(
-        train_set,
-        batch_size=args.batch_size,
-        num_workers=multiprocessing.cpu_count() // 2,
-        shuffle=True,
-        pin_memory=use_cuda,
-        drop_last=True,
-    )
-
-    val_set = set_augment(val_set, args.augment_valid, dataset)
-    val_loader = DataLoader(
-        val_set,
-        batch_size=args.valid_batch_size,
-        num_workers=multiprocessing.cpu_count() // 2,
-        shuffle=False,
-        pin_memory=use_cuda,
-        drop_last=True,
-    )
-
-    # -- model
-    model_module = getattr(import_module("model"), args.model)  # default: BaseModel
     
-    if "vit" in args.model:
-        print(max(args.resize))
-        model = model_module(
-            num_classes=num_classes,
-            image_size=max(args.resize)
-        ).to(device)
-    else:
-        model = model_module(
-            num_classes=num_classes
-        ).to(device)
-
-    model = torch.nn.DataParallel(model)
-
-    # -- loss & metric
-    criterion = create_criterion(args.criterion)  # default: cross_entropy
-    opt_module = getattr(import_module("torch.optim"), args.optimizer)  # default: SGD  
-    optimizer = opt_module(
-        filter(lambda p: p.requires_grad, model.parameters()),
-        lr=args.lr,
-        weight_decay=5e-4
-    )
-    scheduler = StepLR(optimizer, args.lr_decay_step, gamma=0.5)
-
-    # -- logging
-    logger = SummaryWriter(log_dir=save_dir)
-    with open(os.path.join(save_dir, 'config.json'), 'w', encoding='utf-8') as f:
-        json.dump(vars(args), f, ensure_ascii=False, indent=4)
-
+    
     best_val_acc = 0
     best_val_loss = np.inf
-    for epoch in range(args.epochs):
-        # train loop
-        model.train()
-        loss_value = 0
-        matches = 0
-        for idx, train_batch in enumerate(train_loader):
-            inputs, labels = train_batch
-            inputs = inputs.to(device)
-            labels = labels.to(device)
+    fold_avg_acc = 0
+    fold_avg_loss = 0
+    data_set_list = dataset.split_dataset()
+    
 
-            optimizer.zero_grad()
+    for fold,train_set,val_set in data_set_list:
+        if 'kfold' in args.dataset:
+            print(f'FOLD {fold}')
+            print('--------------------------------')
+        # Define data loaders for training and testing data in this fold
+        #train_set = set_augment(train_set, args.augment_train, dataset)
+        #val_set = set_augment(val_set, args.augment_valid, dataset)
+        train_loader = torch.utils.data.DataLoader(
+                        train_set, 
+                        batch_size=args.batch_size,
+                        num_workers=multiprocessing.cpu_count() // 2,
+                        pin_memory=use_cuda,
+                        drop_last=True,)
+        val_loader = torch.utils.data.DataLoader(
+                        val_set,
+                        batch_size=args.valid_batch_size,
+                        num_workers=multiprocessing.cpu_count() // 2,
+                        shuffle=False,
+                        pin_memory=use_cuda,
+                        drop_last=True)
+        
+        # -- model
+        model_module = getattr(import_module("model"), args.model)  # default: BaseModel
+        
+        if "vit" in args.model:
+            print(max(args.resize))
+            model = model_module(
+                num_classes=num_classes,
+                image_size=max(args.resize)
+            ).to(device)
+        elif args.ensemble:
+            model=ensembling(args.ensemble,num_classes,device)
+        else:
+            model = model_module(
+                num_classes=num_classes
+            ).to(device)
 
-            outs = model(inputs)
-            preds = torch.argmax(outs, dim=-1)
-            loss = criterion(outs, labels)
+        model = torch.nn.DataParallel(model)
 
-            loss.backward()
-            optimizer.step()
+        # -- loss & metric
+        criterion = create_criterion(args.criterion)  # default: cross_entropy
+        opt_module = getattr(import_module("torch.optim"), args.optimizer)  # default: SGD
+        optimizer = opt_module(
+            filter(lambda p: p.requires_grad, model.parameters()),
+            lr=args.lr,
+            weight_decay=5e-4
+        )
+        scheduler = StepLR(optimizer, args.lr_decay_step, gamma=0.5)
 
-            loss_value += loss.item()
-            matches += (preds == labels).sum().item()
-            if (idx + 1) % args.log_interval == 0:
-                train_loss = loss_value / args.log_interval
-                train_acc = matches / args.batch_size / args.log_interval
-                current_lr = get_lr(optimizer)
-                print(
-                    f"Epoch[{epoch}/{args.epochs}]({idx + 1}/{len(train_loader)}) || "
-                    f"training loss {train_loss:4.4} || training accuracy {train_acc:4.2%} || lr {current_lr}"
-                )
-                logger.add_scalar("Train/loss", train_loss, epoch * len(train_loader) + idx)
-                logger.add_scalar("Train/accuracy", train_acc, epoch * len(train_loader) + idx)
+        # -- logging
+        logger = SummaryWriter(log_dir=save_dir)
+        with open(os.path.join(save_dir, 'config.json'), 'w', encoding='utf-8') as f:
+            json.dump(vars(args), f, ensure_ascii=False, indent=4)
+        cnt = 0
 
-                loss_value = 0
-                matches = 0
 
-        scheduler.step()
-
-        # val loop
-        with torch.no_grad():
-            print("Calculating validation results...")
-            model.eval()
-            val_loss_items = []
-            val_acc_items = []
-            figure = None
-            for val_batch in val_loader:
-                inputs, labels = val_batch
+        for epoch in range(args.epochs):
+            # train loop
+            model.train()
+            loss_value = 0
+            matches = 0
+            for idx, train_batch in enumerate(train_loader):
+                inputs, labels = train_batch
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
+                if(args.mixup > 0):
+                    inputs, labels_a, labels_b, lam = mixup_data(inputs, labels, args.mixup, use_cuda)
+                    inputs, labels_a, labels_b = map(Variable,(inputs, labels_a, labels_b))
+                
+                optimizer.zero_grad()
+
                 outs = model(inputs)
                 preds = torch.argmax(outs, dim=-1)
+                if(args.mixup > 0):
+                    loss = mixup_criterion(criterion, outs, labels_a, labels_b, lam)
+                else:
+                    loss = criterion(outs, labels)
 
-                loss_item = criterion(outs, labels).item()
-                acc_item = (labels == preds).sum().item()
-                val_loss_items.append(loss_item)
-                val_acc_items.append(acc_item)
+                loss.backward()
+                optimizer.step()
 
-                if figure is None:
-                    inputs_np = torch.clone(inputs).detach().cpu().permute(0, 2, 3, 1).numpy()
-                    inputs_np = dataset_module.denormalize_image(inputs_np, dataset.mean, dataset.std)
-                    figure = grid_image(
-                        inputs_np, labels, preds, n=16, shuffle=args.dataset != "MaskSplitByProfileDataset"
+                loss_value += loss.item()
+                if(args.mixup>0):
+                    matches += lam*((preds == labels_a).sum().item()) + (1-lam)*((preds == labels_b).sum().item())
+                else:
+                    matches += (preds == labels).sum().item()
+                
+                if (idx + 1) % args.log_interval == 0:
+                    train_loss = loss_value / args.log_interval
+                    train_acc = matches / args.batch_size / args.log_interval
+                    current_lr = get_lr(optimizer)
+                    print(
+                        f"Epoch[{epoch}/{args.epochs}]({idx + 1}/{len(train_loader)}) || "
+                        f"training loss {train_loss:4.4} || training accuracy {train_acc:4.2%} || lr {current_lr}"
                     )
+                    logger.add_scalar("Train/loss", train_loss, epoch * len(train_loader) + idx)
+                    logger.add_scalar("Train/accuracy", train_acc, epoch * len(train_loader) + idx)
 
-            val_loss = np.sum(val_loss_items) / len(val_loader)
-            val_acc = np.sum(val_acc_items) / len(val_set)
-            best_val_loss = min(best_val_loss, val_loss)
-            if val_acc > best_val_acc:
-                print(f"New best model for val accuracy : {val_acc:4.2%}! saving the best model..")
-                torch.save(model.module.state_dict(), f"{save_dir}/best.pth")
-                best_val_acc = val_acc
-            torch.save(model.module.state_dict(), f"{save_dir}/last.pth")
-            print(
-                f"[Val] acc : {val_acc:4.2%}, loss: {val_loss:4.2} || "
-                f"best acc : {best_val_acc:4.2%}, best loss: {best_val_loss:4.2}"
+                    loss_value = 0
+                    matches = 0
+
+            scheduler.step()
+
+            # val loop
+            with torch.no_grad():
+                print("Calculating validation results...")
+                model.eval()
+                val_loss_items = []
+                val_acc_items = []
+                figure = None
+                for val_batch in val_loader:
+                    inputs, labels = val_batch
+                    inputs = inputs.to(device)
+                    labels = labels.to(device)
+
+                    outs = model(inputs)
+                    preds = torch.argmax(outs, dim=-1)
+
+                    loss_item = criterion(outs, labels).item()
+                    acc_item = (labels == preds).sum().item()
+                    val_loss_items.append(loss_item)
+                    val_acc_items.append(acc_item)
+
+                    if figure is None:
+                        inputs_np = torch.clone(inputs).detach().cpu().permute(0, 2, 3, 1).numpy()
+                        inputs_np = dataset_module.denormalize_image(inputs_np, dataset.mean, dataset.std)
+                        figure = grid_image(
+                            inputs_np, labels, preds, n=16, shuffle=args.dataset != "MaskSplitByProfileDataset"
+                        )
+
+                val_loss = np.sum(val_loss_items) / len(val_loader)
+                val_acc = np.sum(val_acc_items) / len(val_set)
+                best_val_acc=max(best_val_acc,val_acc)
+                
+                import earlystopping
+                earlystop=earlystopping.EarlyStopping(patience=args.patience,delta=args.delta)
+                best_val_loss,cnt=earlystop(best_val_loss,val_loss,model,save_dir,cnt)
+                print(
+                    f"[Val] acc : {val_acc:4.2%}, loss: {val_loss:4.2} || "
+                    f"best acc : {best_val_acc:4.2%}, best loss: {best_val_loss:4.2}"
+                )
+                logger.add_scalar("Val/loss", val_loss, epoch)
+                logger.add_scalar("Val/accuracy", val_acc, epoch)
+                logger.add_figure("results", figure, epoch)
+                nni.report_intermediate_result(val_acc)
+                print()
+                if earlystop.early_stop:
+                    print('EARLY STOPPED!')
+                    break
+            nni.report_final_result(val_acc)
+        fold_avg_acc += val_acc
+        fold_avg_loss += val_loss
+    fold_avg_acc /= (fold+1)
+    fold_avg_loss /= (fold+1)
+    print(
+        f"fold avg acc : {fold_avg_acc:4.2%}, fold avg loss: {fold_avg_loss:4.2} || "
+        f"best acc : {best_val_acc:4.2%}, best loss: {best_val_loss:4.2}"
             )
-            logger.add_scalar("Val/loss", val_loss, epoch)
-            logger.add_scalar("Val/accuracy", val_acc, epoch)
-            logger.add_figure("results", figure, epoch)
-            print()
+    print()
 
+
+                
+
+            
+            
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -253,10 +410,10 @@ if __name__ == '__main__':
     # Data and model checkpoints directories
     parser.add_argument('--seed', type=int, default=42, help='random seed (default: 42)')
     parser.add_argument('--epochs', type=int, default=20, help='number of epochs to train (default: 1)')
-    parser.add_argument('--dataset', type=str, default='MaskBaseDataset', help='dataset augmentation type (default: MaskBaseDataset)')
+    parser.add_argument('--dataset', type=str, default='MaskBaseDataset_AddData', help='dataset augmentation type (default: MaskBaseDataset)') # MaskBaseDataset_AddData
     parser.add_argument('--augment_train', type=str, default='CustomAugm_train', help='data augmentation type (default: BaseAugmentation)')
     parser.add_argument('--augment_valid', type=str, default='CustomAugm_val', help='data augmentation type (default: BaseAugmentation)')
-    parser.add_argument("--resize", nargs="+", type=list, default=[512, 384], help='resize size for image when training')   
+    parser.add_argument("--resize", nargs="+", type=int, default=[512, 384], help='resize size for image when training')   
     parser.add_argument('--batch_size', type=int, default=64, help='input batch size for training (default: 64)') 
     parser.add_argument('--valid_batch_size', type=int, default=100, help='input batch size for validing (default: 1000)')
     parser.add_argument('--model', type=str, default='resnet18', help='model type (default: BaseModel)')
@@ -267,6 +424,10 @@ if __name__ == '__main__':
     parser.add_argument('--lr_decay_step', type=int, default=20, help='learning rate scheduler deacy step (default: 20)')
     parser.add_argument('--log_interval', type=int, default=20, help='how many batches to wait before logging training status')
     parser.add_argument('--name', default='exp_0228_a', help='model save at {SM_MODEL_DIR}/{name}')  # Tensorboard에 저장되는 이름
+    parser.add_argument('--ensemble', nargs="+", type=str, default=0,help="ensemble model names")
+    parser.add_argument('--patience', type=int, default=5,help="early_stopping patience")
+    parser.add_argument('--delta', type=float, default=0,help="early_stopping delta")
+    parser.add_argument('--mixup', type=float, default=0,help="if you want mixup, select alpha")
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
@@ -274,6 +435,9 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print(args)
+
+    tuner_params=nni.get_next_parameter()
+    args=munch.munchify(merge_parameter(args,tuner_params))
 
     data_dir = args.data_dir
     model_dir = args.model_dir
