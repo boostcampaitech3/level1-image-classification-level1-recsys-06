@@ -245,7 +245,6 @@ def train(data_dir, model_dir, args):
     fold_avg_acc = 0
     fold_avg_loss = 0
     data_set_list = dataset.split_dataset()
-    cnt = 0
     
 
     for fold,train_set,val_set in data_set_list:
@@ -278,6 +277,8 @@ def train(data_dir, model_dir, args):
                 num_classes=num_classes,
                 image_size=max(args.resize)
             ).to(device)
+        elif args.ensemble:
+            model=ensembling(args.ensemble,num_classes,device)
         else:
             model = model_module(
                 num_classes=num_classes
@@ -299,7 +300,7 @@ def train(data_dir, model_dir, args):
         logger = SummaryWriter(log_dir=save_dir)
         with open(os.path.join(save_dir, 'config.json'), 'w', encoding='utf-8') as f:
             json.dump(vars(args), f, ensure_ascii=False, indent=4)
-
+        cnt = 0
 
 
         for epoch in range(args.epochs):
@@ -410,6 +411,7 @@ def train(data_dir, model_dir, args):
 
                 
 
+            
             
 
 if __name__ == '__main__':
