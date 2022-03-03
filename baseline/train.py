@@ -13,6 +13,7 @@ import numpy as np
 import torch
 from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader
+from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
 from sklearn.model_selection import KFold
 from dataset import MaskBaseDataset, kfold
@@ -185,6 +186,42 @@ def set_augment(data_subset_, mode, dataset):
     return data_subset_
 
 
+def mixup_data(x, y, alpha = 1.0, use_cuda = True):
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else :
+        return x, y
+    batch_size = x.size()[0]
+    
+    if use_cuda:
+        if((2 in y) | (5 in y) | (8 in y) | (11 in y) | (14 in y) | (17 in y)):
+            index = np.where((y.cpu()==2)|(y.cpu()==5)|(y.cpu()==8)|(y.cpu()==11)|(y.cpu()==14)|(y.cpu()==17))
+            index = list(index[0])
+            temp = index
+            while len(index) < batch_size:
+                if len(index) < batch_size - len(index):
+                    index.extend(index)
+                elif len(temp) <= batch_size - len(index):
+                    index.extend(temp)
+                else:
+                    for i in range(batch_size - len(index)):
+                        index.append(index[i])
+
+            index = np.array(index)
+            index = torch.from_numpy(index)
+            index = index.cuda()
+        else:
+            index = torch.randperm(batch_size).cuda()
+    else:
+        index = torch.randperm(batch_size)
+    
+    mixed_x = lam * x + (1-lam)*x[index, :]
+    y_a, y_b = y, y[index]
+    
+    return mixed_x, y_a, y_b, lam
+
+def mixup_criterion(criterion, pred, y_a, y_b, lam):
+    return lam*criterion(pred, y_a) + (1-lam)*criterion(pred, y_b)
 
 def train(data_dir, model_dir, args):
     seed_everything(args.seed)
@@ -275,17 +312,28 @@ def train(data_dir, model_dir, args):
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
+                if(args.mixup > 0):
+                    inputs, labels_a, labels_b, lam = mixup_data(inputs, labels, args.mixup, use_cuda)
+                    inputs, labels_a, labels_b = map(Variable,(inputs, labels_a, labels_b))
+                
                 optimizer.zero_grad()
 
                 outs = model(inputs)
                 preds = torch.argmax(outs, dim=-1)
-                loss = criterion(outs, labels)
+                if(args.mixup > 0):
+                    loss = mixup_criterion(criterion, outs, labels_a, labels_b, lam)
+                else:
+                    loss = criterion(outs, labels)
 
                 loss.backward()
                 optimizer.step()
 
                 loss_value += loss.item()
-                matches += (preds == labels).sum().item()
+                if(args.mixup>0):
+                    matches += lam*((preds == labels_a).sum().item()) + (1-lam)*((preds == labels_b).sum().item())
+                else:
+                    matches += (preds == labels).sum().item()
+                
                 if (idx + 1) % args.log_interval == 0:
                     train_loss = loss_value / args.log_interval
                     train_acc = matches / args.batch_size / args.log_interval
@@ -387,6 +435,7 @@ if __name__ == '__main__':
     parser.add_argument('--ensemble', nargs="+", type=str, default=0,help="ensemble model names")
     parser.add_argument('--patience', type=int, default=5,help="early_stopping patience")
     parser.add_argument('--delta', type=float, default=0,help="early_stopping delta")
+    parser.add_argument('--mixup', type=float, default=0,help="if you want mixup, select alpha")
 
     # Container environment
     parser.add_argument('--data_dir', type=str, default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train/images'))
