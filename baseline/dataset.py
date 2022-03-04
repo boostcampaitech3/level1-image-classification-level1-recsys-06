@@ -75,7 +75,8 @@ class CustomAugm_train:
            # ColorJitter(brightness=0.2), # randomly change color space
            # RandomPerspective(distortion_scale=0.4, p=0.2),
             Normalize(mean=mean, std=std),
-            AddGaussianNoise(),
+            # AddGaussianNoise(),
+            RandAugment(),
             ToTensor(),
         ])
 
