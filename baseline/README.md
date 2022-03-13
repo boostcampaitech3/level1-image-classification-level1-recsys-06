@@ -36,7 +36,6 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 
 
 ## Pretrained Models 
-
 <details>
 <summary>Available Models</summary>
 <div markdown="1">
@@ -133,7 +132,6 @@ SM_GROUND_TRUTH_DIR=[GT dir] SM_OUTPUT_DATA_DIR=[inference output dir] python ev
 
 
 ## EDA
-
 <details>
 <summary>Outliers</summary>
 <div markdown="3">
