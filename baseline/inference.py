@@ -8,13 +8,98 @@ import torch
 from torch.utils.data import DataLoader
 
 from dataset import TestDataset, MaskBaseDataset
+def ensembling(models,num_classes,device):
+    if len(models)==2:
+        print('ENSEMBLING..{0},{1}'.format(models[0],models[1]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
 
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+        
+        model_module=getattr(import_module("ensemble"), 'myensemble2')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            num_classes=num_classes
+        ).to(device)
+
+    elif len(models)==3:
+        print('ENSEMBLING..{0},{1},{2}'.format(models[0],models[1],models[2]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        model_module3 = getattr(import_module("model"), models[2])
+        
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
+
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+
+        model3 = model_module3(
+            num_classes=num_classes,
+        ).to(device)
+        model_module=getattr(import_module("ensemble"), 'myensemble3')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            modelC=model3,
+            num_classes=num_classes
+        ).to(device)
+    elif len(models)==4:
+        print('ENSEMBLING..{0},{1},{2},{3}'.format(models[0],models[1],models[2],models[3]))
+        model_module1 = getattr(import_module("model"), models[0])
+        model_module2 = getattr(import_module("model"), models[1])
+        model_module3 = getattr(import_module("model"), models[2])
+        model_module4 = getattr(import_module("model"), models[3])
+        model1 = model_module1(
+            num_classes=num_classes,
+        ).to(device)
+
+        model2 = model_module2(
+            num_classes=num_classes,
+        ).to(device)
+
+        model3 = model_module3(
+            num_classes=num_classes,
+        ).to(device)
+        model4 = model_module4(
+            num_classes=num_classes,
+        ).to(device)
+        model_module=getattr(import_module("ensemble"), 'myensemble4')
+
+        model=model_module(
+            modelA=model1,
+            modelB=model2,
+            modelC=model3,
+            modelD=model4,
+            num_classes=num_classes
+        ).to(device)
+    return model
 
 def load_model(saved_model, num_classes, device):
     model_cls = getattr(import_module("model"), args.model)
-    model = model_cls(
-        num_classes=num_classes
-    )
+    if "vit" in args.model:
+        print(max(args.resize))
+        model = model_cls(
+            num_classes=num_classes,
+            image_size=max(args.resize)
+        )
+    elif args.ensemble:
+        model=ensembling(args.ensemble,num_classes,device)
+    else:
+        model = model_cls(
+            num_classes=num_classes
+        )
 
     # tarpath = os.path.join(saved_model, 'best.tar.gz')
     # tar = tarfile.open(tarpath, 'r:gz')
@@ -72,7 +157,7 @@ if __name__ == '__main__':
 
     # Data and model checkpoints directories
     parser.add_argument('--batch_size', type=int, default=1000, help='input batch size for validing (default: 1000)')
-    parser.add_argument('--resize', type=tuple, default=(96, 128), help='resize size for image when you trained (default: (96, 128))')
+    parser.add_argument('--resize', type=int, default=(96, 128), help='resize size for image when you trained (default: (96, 128))')
     parser.add_argument('--model', type=str, default='BaseModel', help='model type (default: BaseModel)')
 
     # Container environment
